@@ -1,2 +1,3 @@
 cpipe
 cmdline.c cmdline.h cpipe.1
+*.dc
