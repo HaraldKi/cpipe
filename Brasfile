@@ -1,3 +1,6 @@
+########################################################################
+# $Revision$, $Date$
+########################################################################
 
 set CFLAGS {-W -Wall -ansi -pedantic}
 
@@ -9,3 +12,6 @@ Newer cmdline.c cmdline.cli {
 
 Newer cmdline.o cmdline.c {}
 
+Always clean {} {
+  rm -f [glob -nocomplain *.o] cpipe
+}
