@@ -15,7 +15,7 @@ BINDIR=$(exec_prefix)/bin
 MANDIR=$(prefix)/man/man1
 
 ## Your favorite compiler flags.
-CFLAGS = -O
+CFLAGS = -O -W -Wall
 
 ########################################################################
 cpipe: cpipe.o cmdline.o

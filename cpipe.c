@@ -3,7 +3,7 @@
 
   Watch out, here comes the GPL-virus.
 
-  (C) 1997--2000 Harald Kirsch (kir@iitb.fhg.de)
+  (C) 1997--2001 Harald Kirsch (kirschh@lionbioscience.com)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -62,6 +62,10 @@ scale(double v, char *buf)
   return buf;
 }
 /**********************************************************************/
+/**
+  returns the time delta represented by the given structures as a
+  double value in seconds.
+*****/
 double
 deltaT(struct timeval* tin, struct timeval* tout)
 {
@@ -157,11 +161,18 @@ main(int argc, char **argv)
   int count;
   struct timeval tstart, tin, tnow;
   char txt1[40], txt2[40], txt3[40];
+  double targetT=0.0;	     /* used for -s, time one block should take */
+  double calib=0.98;	     /* a correcton factor for sleep time */
 
   /***** BEGIN */
   cmd = parseCmdline(argc, argv);
-  cmd->bsize *= 1024;
-  
+
+  cmd->bsize *= ONEk;
+  if( cmd->speedP ) {
+    cmd->speed *= ONEk;
+    targetT = ((double)cmd->bsize)/cmd->speed;
+  }
+
   buf = malloc(cmd->bsize);
   if( !buf ) {
     fprintf(stderr, 
@@ -182,15 +193,38 @@ main(int argc, char **argv)
     writeBuffer(buf, count, cmd->vwP);
     gettimeofday(&tnow, NULL);
     dt = deltaT(&tin, &tnow);
+
+    /***** 
+      If speed limit is requested, we might have to sleep. On most
+      architectures, the usleep will have a fixed minimum delay of
+      e.g. 0.01s. Consequently the throughput is severely limited by
+      this if the buffer size choosen is too small.
+    *****/
+    if( cmd->speedP && targetT>dt ) {
+      double factor;
+      unsigned long sleeptime = (unsigned long)((targetT-dt)*1e6*calib);
+      usleep(sleeptime);
+      gettimeofday(&tnow, NULL);
+      dt = deltaT(&tin, &tnow);
+
+      /***** 
+        recalibrate the calibration factor. The value it should have
+	had is factor*calib. However we do not jump to this value but
+	move only 1/8th of the distance to achive some damping.
+      *****/
+      factor = ((double)count/dt)/cmd->speed;
+      calib += 0.125*(factor*calib-calib);
+    }
+
     dtAll = deltaT(&tstart, &tnow);
 
     if( cmd->vtP ) {
-    fprintf(stderr, 
-	    "thru: %7.3fms at %7sB/s (%7sB/s avg) %7sB\n", 
-	    1e3*dt, 
-	    scale((double)count/dt, txt1),
-	    scale(TotalBytes/dtAll, txt2),
-	    scale(TotalBytes, txt3));
+      fprintf(stderr, 
+	      "thru: %7.3fms at %7sB/s (%7sB/s avg) %7sB\n", 
+	      1e3*dt, 
+	      scale((double)count/dt, txt1),
+	      scale(TotalBytes/dtAll, txt2),
+	      scale(TotalBytes, txt3));
     }
   }
   return 0;

@@ -11,7 +11,7 @@ Copyright: GPL
 Group: Applications/Archiving
 Source: cpipe-%{VERSION}.tar.gz
 URL: http://wsd.iitb.fhg.de/~kir/cpipehome/
-Packager: Harald Kirsch (kir@iitb.fhg.de)
+Packager: Harald Kirsch (kirschh@lionbioscience.com)
 
 BuildRoot: /tmp/cpipe-rpmbuild
 

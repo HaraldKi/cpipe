@@ -44,11 +44,9 @@ forfile line $in {
 
 ########################################################################
 
-Newer cpipe {cpipe.o cmdline.o} {}
+Newer cpipe cmdline.o
 
-Newer { cmdline.c cmdline.h cpipe.1 } cmdline.cli {
-  clig cmdline.cli
-}
+Newer cpipe.1 cmdline.cli
 
 Always clean {} {
   rm -f [glob -nocomplain *.o cmdline.\[ch\] *.dc *~] cpipe cpipe.1
@@ -67,17 +65,18 @@ Newer $TGZ [concat $CVSDEPS cmdline.c cmdline.h cpipe.1] {
 }
 
 Newer $RPM $TGZ {
-  rpm -tb $TGZ
+  rpm --quiet -tb $TGZ
 }
 
 Always publish-index {} {
   sed -e "s/|VERSION|/$VERSION/g" <index.html.in >index.html
-  scp index.html dir.ttml wsd:.public_html/cpipehome/
+  scp index.html dir.ttml wsd:.public_html/cpipehome/ 2>@stderr
   rm index.html
 }
 
 Always publish [concat $RPM $TGZ publish-index] {
   tar xzfO $TGZ cpipe-$VERSION/CHANGES >CHANGES
-  scp $RPM $TGZ CHANGES wsd:.public_html/cpipehome/
+  scp $RPM $TGZ CHANGES wsd:.public_html/cpipehome/ 2>@stderr
   rm CHANGES
 }
+

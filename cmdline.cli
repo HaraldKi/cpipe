@@ -13,6 +13,8 @@ Flag -vr vr {show read-times}
 
 Flag -vw vw {show write-times}
 
+Double -s speed {throughput speed limit in kB/s} -r 1 oo
+
 Description {
 .B Cpipe 
 copies its standard input to its standard output while measuring the
@@ -21,6 +23,21 @@ one or more of the
 .BI -v x
 options is given, statistics of average throughput and the total
 amount of bytes copied are printed to the standard error output.
+
+.SS Limiting Throughput 
+If a throughput limit is specified with option
+.BR -s ,
+.B cpipe
+calls 
+.BR usleep (3)
+in between copying buffers, thereby artificially extending the duration 
+of a read/write-cycle. Since on most systems 
+there is a certain minimum time usleep() sleeps, e.g. 0.01s, it is
+impossible to reach high limits with a small buffer size. In this case 
+increasing the buffer size (option
+.BR -b )
+might help. However, keep in mind that this limits the throughput only 
+on the average. Every single buffer is copied as fast as possible.
 
 .SH EXAMPLE
 The command
@@ -62,10 +79,12 @@ same for reading and writing.
 This program uses precious processor cycles. Consequently the measured
 times will be different from the transfer rates possible without it.
 
+.SH CREDITS
+Peter Astrand <astrand@lysator.liu.se> recommended the speed limit.
 
 .SH AUTHOR
 Bug reports, beer and postcards go to 
-.IR kir@iitb.fhg.de . 
+.IR kirschh@lionbioscience.com . 
 New versions will show up on
 .br
 .IR http://wsd.iitb.fhg.de/~kir/cpipehome/ .
