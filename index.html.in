@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"> 
+<HTML>
+<HEAD>
+<TITLE>cpipe --- counting pipe</TITLE>
+<!-- $Revsion$, $Date$ -->
+
+
+</HEAD>
+<BODY>
+<H1>cpipe --- counting pipe</H1>
+
+    <p>Did you ever want to know how fast your <code>tar</code> is or
+      how much data it has transferred already. How about using
+      <code>socket</code> or <code>nc</code> to copy files either with
+      or without compression over a fast network connection, which one
+      is faster?
+      
+    <p>If you want to know the answer, use <code>cpipe</code> as a
+    totally <em>unscientific</em> approach to measure throughput.
+    <code>Cpipe</code> copies its standard input to its standard output
+    while measuring the time it takes to read an input buffer and
+    write an output buffer. Statistics of average throughput and the
+    total amount of bytes copied are printed to the standard error
+    output.
+
+    <p>You may download <code>cpipe</code> as <a
+    href="cpipe-|VERSION|.tar.gz">cpipe-|VERSION|.tar.gz</a> or as <a
+    href="cpipe-|VERSION|-0.i386.rpm">cpipe-|VERSION|-0.i386.rpm</a>.
+
+    <p><a href="dir.ttml">Old versions</a> are available as well as a
+      <a href="CHANGES">change log</a>.
+<hr>
+Please send comments and suggestions to 
+<a href="mailto:kir@iitb.fhg.de">Harald Kirsch</a>.
+</BODY>
+</HTML>
