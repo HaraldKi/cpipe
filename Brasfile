@@ -1,16 +1,16 @@
 ########################################################################
 # $Revision$, $Date$
 ########################################################################
+include $::bras::base/c2o.rule
+include $::bras::base/o2x.rule
+include $::bras::base/cdeps.rule
+include $::bras::base/cli2ch.rule
+ 
+########################################################################
 
 set CFLAGS {-O2 -W -Wall -ansi -pedantic}
 
-Newer cpipe {cpipe.c cmdline.o} {}
-
-Newer cmdline.c cmdline.cli {
-  clig cmdline.cli
-}
-
-Newer cmdline.o cmdline.c {}
+Newer cpipe {cpipe.o cmdline.o} {}
 
 Always clean {} {
   rm -f [glob -nocomplain *.o] cpipe
