@@ -17,6 +17,8 @@
 size_t TotalBytes;
 double totalTin, totalTout;
 
+double kB = 1.0/(double)1024;
+
 /**********************************************************************/
 double
 deltaT(struct timeval* tin, struct timeval* tout)
@@ -33,7 +35,7 @@ deltaT(struct timeval* tin, struct timeval* tout)
 }
 /**********************************************************************/
 ssize_t
-readBuffer(char *buf, size_t length)
+readBuffer(char *buf, size_t length, int show)
 {
   size_t totalBytes;
   ssize_t bytes;
@@ -58,15 +60,17 @@ readBuffer(char *buf, size_t length)
   dt =  deltaT(&tin, &tout);
   totalTin += dt;
   TotalBytes += totalBytes;
-  fprintf(stderr, " in: %7.3fms at %6.0fkB/s (%6.0fkB/s avg)\n", 
-	  1e3*dt, 
-	  1e-3*(double)totalBytes/dt, 
-	  1e-3*(double)TotalBytes/totalTin);
+  if( show ) {
+    fprintf(stderr, "  in: %7.3fms at %6.0fkB/s (%6.0fkB/s avg)\n", 
+	    1e3*dt, 
+	    (double)totalBytes/dt*kB, 
+	    (double)TotalBytes/totalTin*kB);
+  }
   return totalBytes;
 }
 /**********************************************************************/
 void
-writeBuffer(char *buf, size_t length)
+writeBuffer(char *buf, size_t length, int show)
 {
   size_t totalBytes;
   ssize_t bytes;
@@ -88,12 +92,13 @@ writeBuffer(char *buf, size_t length)
   gettimeofday(&tout, NULL);
   dt =  deltaT(&tin, &tout);
   totalTout += dt;
-  fprintf(stderr, 
-	  "out: %7.3fms at %6.0fkB/s (%6.0fkB/s avg) %7.0fkB\n", 
-	  1e3*dt, 
-	  1e-3*(double)totalBytes/dt, 
-	  1e-3*(double)TotalBytes/totalTout,
-	  1e-3*(double)TotalBytes);
+  if( show ) {
+    fprintf(stderr, 
+	    " out: %7.3fms at %6.0fkB/s (%6.0fkB/s avg)\n", 
+	    1e3*dt, 
+	    (double)totalBytes/dt*kB, 
+	    (double)TotalBytes/totalTout*kB);
+  }
 }
 /**********************************************************************/
 int
@@ -102,11 +107,12 @@ main(int argc, char **argv)
   Cmdline *cmd;
   char *buf;
   int count;
+  struct timeval tstart, tin, tnow;
 
   /***** BEGIN */
   cmd = parseCmdline(argc, argv);
   cmd->bsize *= 1024;
-
+  
   buf = malloc(cmd->bsize);
   if( !buf ) {
     fprintf(stderr, 
@@ -118,10 +124,25 @@ main(int argc, char **argv)
   TotalBytes = 0;
   totalTin = 0.0;
   totalTout = 0.0;
-
+  
+  gettimeofday(&tstart, NULL);
   for(count=cmd->bsize; count==cmd->bsize; /**/) {
-    count = readBuffer(buf, cmd->bsize);
-    writeBuffer(buf, count);
+    double dt, dtAll;
+    gettimeofday(&tin, NULL);
+    count = readBuffer(buf, cmd->bsize, cmd->vrP);
+    writeBuffer(buf, count, cmd->vwP);
+    gettimeofday(&tnow, NULL);
+    dt = deltaT(&tin, &tnow);
+    dtAll = deltaT(&tstart, &tnow);
+
+    if( cmd->vtP ) {
+      fprintf(stderr, 
+	      "thru: %7.3fms at %6.0fkB/s (%6.0fkB/s avg) %7.0fkB\n",
+	      1e3*dt, 
+	      (double)count/dt*kB,
+	      (double)TotalBytes/dtAll*kB,
+	      (double)TotalBytes*kB);
+    }
   }
   return 0;
 }

@@ -11,7 +11,7 @@
 .\" it edited by clig, remove the respective pair of cligPart-lines.
 .\"
 .\" cligPart TITLE
-.TH "cpipe" 1 "1997-03-27" "Clig-manuals" "Programmer's Manual"
+.TH "cpipe" 1 "1998-02-24" "Clig-manuals" "Programmer's Manual"
 .\" cligPart TITLE end
 
 .\" cligPart NAME
@@ -23,6 +23,9 @@ cpipe \- copy stdin to stderr while counting bytes and reporting progess
 .SH SYNOPSIS
 .B cpipe
 [-b bsize]
+[-vt]
+[-vr]
+[-vw]
 
 .\" cligPart SYNOPSIS end
 
@@ -34,6 +37,12 @@ buffer size in kB,
 1 integer value between 1 and oo.
 .br
 Default: `128'
+.IP -vt
+show throughput.
+.IP -vr
+show read-times.
+.IP -vw
+show write-times.
 .\" cligPart OPTIONS end
 
 .\" cligPart DESCRIPTION

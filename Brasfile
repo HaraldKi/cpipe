@@ -2,7 +2,7 @@
 # $Revision$, $Date$
 ########################################################################
 
-set CFLAGS {-W -Wall -ansi -pedantic}
+set CFLAGS {-O2 -W -Wall -ansi -pedantic}
 
 Newer cpipe {cpipe.c cmdline.o} {}
 

@@ -7,3 +7,9 @@ Int -b bsize {buffer size in kB} \
     range=1,oo \
     default=128
 
+Flag -vt vt {show throughput}
+
+Flag -vr vr {show read-times}
+
+Flag -vw vw {show write-times}
+
