@@ -1,0 +1,9 @@
+Name cpipe
+
+Usage {copy stdin to stderr while counting bytes and reporting progess}
+
+
+Int -b bsize {buffer size in kB} \
+    range=1,oo \
+    default=128
+

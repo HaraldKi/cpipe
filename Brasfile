@@ -1,0 +1,11 @@
+
+set CFLAGS {-W -Wall -ansi -pedantic}
+
+Newer cpipe {cpipe.c cmdline.o} {}
+
+Newer cmdline.c cmdline.cli {
+  clig cmdline.cli
+}
+
+Newer cmdline.o cmdline.c {}
+
