@@ -1,0 +1,11 @@
+To install run
+
+   make CFLAGS="-your -favorite -flags; 
+   make install prefix=/where/to/install
+
+or edit the top of makefile.
+
+
+Harald Kirsch (kir@iitb.fhg.de)
+
+($Revision$, $Date)
