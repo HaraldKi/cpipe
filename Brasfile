@@ -1,4 +1,10 @@
 ########################################################################
+#
+# If you wonder what this strange file might be, go to
+#   http://wsd.iitb.fhg.de/~kir/brashome/
+# to find out that it is a kind of makefile, but with Tcl-syntax. It
+# should however not be necessary to install cpipe. Just run make.
+#
 # $Revision$, $Date$
 ########################################################################
 include $::bras::base/c2o.rule
@@ -8,10 +14,70 @@ include $::bras::base/cli2ch.rule
  
 ########################################################################
 
+set VERSION [lindex [exec cat .version] 2]
+
+getenv RPMDIR [file join [glob ~] rpm RPMS i386]
+getenv TGZDIR [file join [glob ~] rpm SOURCES]
+
+set TGZ [file join $TGZDIR cpipe-$VERSION.tar.gz]
+set RPM [file join $RPMDIR cpipe-$VERSION-0.i386.rpm]
+
 set CFLAGS {-O2 -W -Wall -ansi -pedantic}
+
+########################################################################
+## My assorted goodies for tcl have `forfile'
+package require agft
+namespace import ::agft::forfile
+
+## find the list of all files cvs knows about
+set in [open "|cvs -q log -h" r]
+set CVSDEPS {}
+forfile line $in {
+  if {[regexp {^Working file: *(.*)} $line d file]} {
+    set f [string trim $file "\t "]
+    if {[file exist $f]} {
+      lappend CVSDEPS [string trim $file "\t "]
+    }
+  }
+}
+
+
+########################################################################
 
 Newer cpipe {cpipe.o cmdline.o} {}
 
+Newer { cmdline.c cmdline.h cpipe.1 } cmdline.cli {
+  clig cmdline.cli
+}
+
 Always clean {} {
-  rm -f [glob -nocomplain *.o] cpipe
+  rm -f [glob -nocomplain *.o cmdline.\[ch\] *.dc *~] cpipe cpipe.1
+}
+
+Always tgz $TGZ {
+  # just a link to make the tgz
+}
+
+Always rpm $RPM {
+  # just a link to make the rpm
+}
+
+Newer $TGZ [concat $CVSDEPS cmdline.c cmdline.h cpipe.1] {
+  ship -d $TGZDIR -F -I cmdline.c cmdline.h cpipe.1 -e cpipe.spec
+}
+
+Newer $RPM $TGZ {
+  rpm -tb $TGZ
+}
+
+Always publish-index {} {
+  sed -e "s/|VERSION|/$VERSION/g" <index.html.in >index.html
+  scp index.html dir.ttml wsd:.public_html/cpipehome/
+  rm index.html
+}
+
+Always publish [concat $RPM $TGZ publish-index] {
+  tar xzfO $TGZ cpipe-$VERSION/CHANGES >CHANGES
+  scp $RPM $TGZ CHANGES wsd:.public_html/cpipehome/
+  rm CHANGES
 }

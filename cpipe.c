@@ -1,7 +1,24 @@
 /**********************************************************************
   cpipe -- counting pipe
 
-  (C) 1997 Harald Kirsch (kir@iitb.fhg.de)
+  Watch out, here comes the GPL-virus.
+
+  (C) 1997--2000 Harald Kirsch (kir@iitb.fhg.de)
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
   $Revision$, $Date$
 **********************************************************************/
 
@@ -12,14 +29,38 @@
 #include <unistd.h>
 #include <errno.h>
 
-
 #include "cmdline.h"
 
-size_t TotalBytes;
+#define ONEk 1024.0
+#define ONEkSCALE (1.0/ONEk)
+#define ONEM (1024.0*1024.0)
+#define ONEMSCALE (1.0/ONEM)
+#define ONEG (1024.0*1024.0*1024.0)
+#define ONEGSCALE (1.0/ONEG)
+
+double TotalBytes;
 double totalTin, totalTout;
 
-double kB = 1.0/(double)1024;
-
+/**********************************************************************/
+char *
+scale(double v, char *buf)
+{
+  if( v>ONEM ) {
+    /***** This is at least a G */
+    if( v>ONEG ) {
+      sprintf(buf, "%6.1fG", v*ONEGSCALE);
+    } else {
+      sprintf(buf, "%6.1fM", v*ONEMSCALE);
+    }
+  } else {
+    if( v>ONEk ) {
+      sprintf(buf, "%6.1fk", v*ONEkSCALE);
+    } else {
+      sprintf(buf, "%4.0f", v);
+    }
+  }
+  return buf;
+}
 /**********************************************************************/
 double
 deltaT(struct timeval* tin, struct timeval* tout)
@@ -42,7 +83,8 @@ readBuffer(char *buf, size_t length, int show)
   ssize_t bytes;
   struct timeval tin, tout;
   double dt;
-
+  char txt1[40], txt2[40], txt3[40];
+  
   gettimeofday(&tin, NULL);
   for(totalBytes=0; totalBytes<length; totalBytes+=bytes, buf+=bytes) {
     bytes = read(STDIN_FILENO, buf, length-totalBytes);
@@ -60,12 +102,14 @@ readBuffer(char *buf, size_t length, int show)
   gettimeofday(&tout, NULL);
   dt =  deltaT(&tin, &tout);
   totalTin += dt;
-  TotalBytes += totalBytes;
+  TotalBytes += (double)totalBytes;
   if( show ) {
-    fprintf(stderr, "  in: %7.3fms at %6.0fkB/s (%6.0fkB/s avg)\n", 
+    fprintf(stderr, 
+	    "  in: %7.3fms at %7sB/s (%7sB/s avg) %7sB\n", 
 	    1e3*dt, 
-	    (double)totalBytes/dt*kB, 
-	    (double)TotalBytes/totalTin*kB);
+	    scale((double)totalBytes/dt, txt1),
+	    scale(TotalBytes/totalTin, txt2),
+	    scale(TotalBytes, txt3));
   }
   return totalBytes;
 }
@@ -77,6 +121,8 @@ writeBuffer(char *buf, size_t length, int show)
   ssize_t bytes;
   struct timeval tin, tout;
   double dt;
+  char txt1[40], txt2[40], txt3[40];
+
   gettimeofday(&tin, NULL);
   for(totalBytes=0; totalBytes<length; totalBytes+=bytes, buf+=bytes) {
     bytes = write(STDOUT_FILENO, buf, length-totalBytes);
@@ -95,10 +141,11 @@ writeBuffer(char *buf, size_t length, int show)
   totalTout += dt;
   if( show ) {
     fprintf(stderr, 
-	    " out: %7.3fms at %6.0fkB/s (%6.0fkB/s avg)\n", 
+	    " out: %7.3fms at %7sB/s (%7sB/s avg) %7sB\n", 
 	    1e3*dt, 
-	    (double)totalBytes/dt*kB, 
-	    (double)TotalBytes/totalTout*kB);
+	    scale((double)totalBytes/dt, txt1),
+	    scale(TotalBytes/totalTout, txt2),
+	    scale(TotalBytes, txt3));
   }
 }
 /**********************************************************************/
@@ -109,6 +156,7 @@ main(int argc, char **argv)
   char *buf;
   int count;
   struct timeval tstart, tin, tnow;
+  char txt1[40], txt2[40], txt3[40];
 
   /***** BEGIN */
   cmd = parseCmdline(argc, argv);
@@ -122,7 +170,7 @@ main(int argc, char **argv)
     exit(EXIT_FAILURE);
   }
 
-  TotalBytes = 0;
+  TotalBytes = 0.0;
   totalTin = 0.0;
   totalTout = 0.0;
   
@@ -137,12 +185,12 @@ main(int argc, char **argv)
     dtAll = deltaT(&tstart, &tnow);
 
     if( cmd->vtP ) {
-      fprintf(stderr, 
-	      "thru: %7.3fms at %6.0fkB/s (%6.0fkB/s avg) %7.0fkB\n",
-	      1e3*dt, 
-	      (double)count/dt*kB,
-	      (double)TotalBytes/dtAll*kB,
-	      (double)TotalBytes*kB);
+    fprintf(stderr, 
+	    "thru: %7.3fms at %7sB/s (%7sB/s avg) %7sB\n", 
+	    1e3*dt, 
+	    scale((double)count/dt, txt1),
+	    scale(TotalBytes/dtAll, txt2),
+	    scale(TotalBytes, txt3));
     }
   }
   return 0;

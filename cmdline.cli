@@ -1,6 +1,6 @@
 Name cpipe
 
-Usage {copy stdin to stderr while counting bytes and reporting progess}
+Usage {copy stdin to stdout while counting bytes and reporting progress}
 
 
 Int -b bsize {buffer size in kB} \
@@ -13,3 +13,64 @@ Flag -vr vr {show read-times}
 
 Flag -vw vw {show write-times}
 
+Description {
+.B Cpipe 
+copies its standard input to its standard output while measuring the
+time it takes to read an input buffer and write an output buffer. If
+one or more of the 
+.BI -v x
+options is given, statistics of average throughput and the total
+amount of bytes copied are printed to the standard error output.
+
+.SH EXAMPLE
+The command
+.nf
+  tar cCf / - usr | cpipe -vr -vw -vt > /dev/null
+.fi
+results in an output like
+.nf
+  ...
+    in:  19.541ms at    6.4MB/s (   4.7MB/s avg)    2.0MB
+   out:   0.004ms at   30.5GB/s (  27.1GB/s avg)    2.0MB
+  thru:  19.865ms at    6.3MB/s (   4.6MB/s avg)    2.0MB
+  ...
+.fi
+The
+.I first column
+shows the times it takes to handle one buffer of data (128kB by default).
+The read-call took 19.541ms, the write-call to /dev/null took just
+0.004ms and from the start of the read to the end of write, it took
+19.865ms. 
+
+The
+.I second column
+shows the result of dividing the buffer size (128kB by default) by the 
+times in the first column.
+
+The
+.I "third column"
+contains the average over all measured values from the start of the
+program.
+
+Finally, the
+.I "last column"
+shows the total number of bytes transferred, which is of course the
+same for reading and writing.
+
+
+.SH BUGS
+This program uses precious processor cycles. Consequently the measured
+times will be different from the transfer rates possible without it.
+
+
+.SH AUTHOR
+Bug reports, beer and postcards go to 
+.IR kir@iitb.fhg.de . 
+New versions will show up on
+.br
+.IR http://wsd.iitb.fhg.de/~kir/cpipehome/ .
+
+}
+
+set in [open .version r]; set v [read $in]; close $in
+Version [lindex $v 2]
