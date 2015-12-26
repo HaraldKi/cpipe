@@ -3,7 +3,7 @@
 
   Watch out, here comes the GPL-virus.
 
-  (C) 1997--2001 Harald Kirsch (kirschh@lionbioscience.com)
+  (C) 1997--2003 Harald Kirsch (pifpafpuf@gmx.de)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,15 +19,18 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-  $Revision$, $Date$
+  $Revision: 1.7 $, $Date: 2003/07/22 08:16:29 $
 **********************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
+#include <math.h>
 
 #include "cmdline.h"
 
@@ -70,50 +73,74 @@ double
 deltaT(struct timeval* tin, struct timeval* tout)
 {
   long usec;
+  double sec;
 
   usec = tout->tv_usec - tin->tv_usec;
   if( usec<0 ) {
-    usec = (usec + 1000000) +1000000*(tout->tv_sec-tin->tv_sec-1);
+    sec = tout->tv_sec-tin->tv_sec-1 + ((double)(usec + 1000000))*1e-6;
   } else {
-    usec += 1000000*(tout->tv_sec-tin->tv_sec);
+    sec = tout->tv_sec-tin->tv_sec + ((double)usec)*1e-6;
   }
-  return (double)usec * 1e-6;
+  return sec;
 }
 /**********************************************************************/
 ssize_t
-readBuffer(char *buf, size_t length, int show)
+readBuffer(char *buf, size_t length, int show, int nonblock, int *eof)
 {
   size_t totalBytes;
   ssize_t bytes;
   struct timeval tin, tout;
   double dt;
   char txt1[40], txt2[40], txt3[40];
-  
+  int flags;
+
+  /***** 
+    The first read is always a blocking one, because there is no point
+    in returning 0 bytes.
+  *****/
+  flags = fcntl(STDIN_FILENO, F_GETFL);
+  fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK);
+
   gettimeofday(&tin, NULL);
   for(totalBytes=0; totalBytes<length; totalBytes+=bytes, buf+=bytes) {
     bytes = read(STDIN_FILENO, buf, length-totalBytes);
-    if( 0==bytes ) break;
-    if( -1==bytes ) {
-      if( errno!=EINTR && errno!=EAGAIN ) {
-	fprintf(stderr, "%s: error reading stdin because `%s'\n",
-		Program, strerror(errno));
-	exit(EXIT_FAILURE);
-      } else {
-	bytes = 0;
-      }
+    if( 0==bytes ) {*eof=1; break;}
+    if( bytes>0 ) {
+      if( nonblock ) fcntl(STDIN_FILENO, F_SETFL, flags|O_NONBLOCK);
+      continue;
     }
+    if( errno==EAGAIN ) {
+      /***** non-blocking operation returned with 0 bytes */
+      break;
+    }
+    if( errno==EINTR ) {
+      /****** on interrupt, we try again, even in non-blocking mode */
+      bytes = 0;
+      continue;
+    }
+
+    /***** serious error on read */
+    fprintf(stderr, "%s: error reading stdin because `%s'\n",
+	    Program, strerror(errno));
+    exit(EXIT_FAILURE);
   }
+
   gettimeofday(&tout, NULL);
-  dt =  deltaT(&tin, &tout);
-  totalTin += dt;
   TotalBytes += (double)totalBytes;
   if( show ) {
+    dt =  deltaT(&tin, &tout);
+    totalTin += dt;
     fprintf(stderr, 
-	    "  in: %7.3fms at %7sB/s (%7sB/s avg) %7sB\n", 
+	    "  in: %7.3fms at %7sB/s (%7sB/s avg) %7sB", 
 	    1e3*dt, 
 	    scale((double)totalBytes/dt, txt1),
 	    scale(TotalBytes/totalTin, txt2),
 	    scale(TotalBytes, txt3));
+    if( totalBytes<length ) {
+      fprintf(stderr, "   (bsize=%u)\n", totalBytes);
+    } else {
+      fprintf(stderr, "\n");
+    }
   }
   return totalBytes;
 }
@@ -141,9 +168,9 @@ writeBuffer(char *buf, size_t length, int show)
     }
   }
   gettimeofday(&tout, NULL);
-  dt =  deltaT(&tin, &tout);
-  totalTout += dt;
   if( show ) {
+    dt =  deltaT(&tin, &tout);
+    totalTout += dt;
     fprintf(stderr, 
 	    " out: %7.3fms at %7sB/s (%7sB/s avg) %7sB\n", 
 	    1e3*dt, 
@@ -159,18 +186,20 @@ main(int argc, char **argv)
   Cmdline *cmd;
   char *buf;
   int count;
+  int eof;
   struct timeval tstart, tin, tnow;
   char txt1[40], txt2[40], txt3[40];
-  double targetT=0.0;	     /* used for -s, time one block should take */
   double calib=0.98;	     /* a correcton factor for sleep time */
 
   /***** BEGIN */
   cmd = parseCmdline(argc, argv);
 
   cmd->bsize *= ONEk;
-  if( cmd->speedP ) {
-    cmd->speed *= ONEk;
-    targetT = ((double)cmd->bsize)/cmd->speed;
+  if( cmd->speedP ) cmd->speed *= ONEk;
+
+  if( cmd->ngrP ) {
+    /***** switch input into non-blocking */
+    fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
   }
 
   buf = malloc(cmd->bsize);
@@ -186,34 +215,44 @@ main(int argc, char **argv)
   totalTout = 0.0;
   
   gettimeofday(&tstart, NULL);
-  for(count=cmd->bsize; count==cmd->bsize; /**/) {
+  for(count=cmd->bsize, eof=0; !eof; /**/) {
     double dt, dtAll;
+    double delay;
+
     gettimeofday(&tin, NULL);
-    count = readBuffer(buf, cmd->bsize, cmd->vrP);
+    count = readBuffer(buf, cmd->bsize, cmd->vrP, cmd->ngrP, &eof);
     writeBuffer(buf, count, cmd->vwP);
     gettimeofday(&tnow, NULL);
     dt = deltaT(&tin, &tnow);
 
     /***** 
       If speed limit is requested, we might have to sleep. On most
-      architectures, the usleep will have a fixed minimum delay of
+      architectures, the nanosleep will have a fixed minimum delay of
       e.g. 0.01s. Consequently the throughput is severely limited by
       this if the buffer size choosen is too small.
     *****/
-    if( cmd->speedP && targetT>dt ) {
+    delay = 
+      (double)count/cmd->speed	/* the time it should have taken */
+      - dt;			/* the time it took */
+    if( cmd->speedP && delay>0 ) {
+      struct timespec sleeptime;
       double factor;
-      unsigned long sleeptime = (unsigned long)((targetT-dt)*1e6*calib);
-      usleep(sleeptime);
-      gettimeofday(&tnow, NULL);
-      dt = deltaT(&tin, &tnow);
+      delay *= calib;
+      sleeptime.tv_sec = (time_t)delay;
+      sleeptime.tv_nsec = 1e9*(delay-floor(delay));
+      if( 0==nanosleep(&sleeptime, NULL) ) {
+	/***** only recalibrate if we waited the full time */
+	gettimeofday(&tnow, NULL);
+	dt = deltaT(&tin, &tnow);
 
-      /***** 
-        recalibrate the calibration factor. The value it should have
-	had is factor*calib. However we do not jump to this value but
-	move only 1/8th of the distance to achive some damping.
-      *****/
-      factor = ((double)count/dt)/cmd->speed;
-      calib += 0.125*(factor*calib-calib);
+	/***** 
+          recalibrate the calibration factor. The value it should have
+	  had is factor*calib. However we do not jump to this value but
+	  move only 1/8th of the distance to achive some damping.
+	*****/
+	factor = ((double)count/dt)/cmd->speed;
+	calib += 0.125*(factor*calib-calib);
+      } 
     }
 
     dtAll = deltaT(&tstart, &tnow);

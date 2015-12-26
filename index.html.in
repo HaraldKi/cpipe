@@ -1,36 +1,65 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"> 
-<HTML>
-<HEAD>
-<TITLE>cpipe --- counting pipe</TITLE>
-<!-- $Revsion$, $Date$ -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"> <html>
+<head>
+<title>cpipe --- counting pipe</title>
+<!-- $Revsion$, $Date: 2001/12/09 10:35:41 $ -->
 
 
-</HEAD>
-<BODY>
-<H1>cpipe --- counting pipe</H1>
+</head>
+<body>
+<h1>cpipe --- counting pipe</h1>
 
-    <p>Did you ever want to know how fast your <code>tar</code> is or
-      how much data it has transferred already. How about using
-      <code>socket</code> or <code>nc</code> to copy files either with
-      or without compression over a fast network connection, which one
-      is faster?
+<p>Did you ever want to know how fast your <code>tar</code> is or how
+much data it has transferred already. How about using
+<code>socket</code> or <code>nc</code> to copy files either with or
+without compression over a fast network connection, which one is
+faster?</p>
       
-    <p>If you want to know the answer, use <code>cpipe</code> as a
-    totally <em>unscientific</em> approach to measure throughput.
-    <code>Cpipe</code> copies its standard input to its standard output
-    while measuring the time it takes to read an input buffer and
-    write an output buffer. Statistics of average throughput and the
-    total amount of bytes copied are printed to the standard error
-    output.
+<p>If you want to know the answer, use <code>cpipe</code> as a totally
+<em>unscientific</em> approach to measure throughput.
+<code>Cpipe</code> copies its standard input to its standard output
+while measuring the time it takes to read an input buffer and write an
+output buffer. Statistics of average throughput and the total amount
+of bytes copied are printed to the standard error output.</p>
 
-    <p>You may download <code>cpipe</code> as <a
-    href="cpipe-|VERSION|.tar.gz">cpipe-|VERSION|.tar.gz</a> or as <a
-    href="cpipe-|VERSION|-0.i386.rpm">cpipe-|VERSION|-0.i386.rpm</a>.
+<h2>Example</h2>
+    <p>
+      The command
+      <blockquote>
+	<code>
+	  tar cCf / - usr | <font color=red>cpipe</font> -vr -vw -vt > /dev/null
+	</code>
+      </blockquote>
+      results in an output like
+      <blockquote><pre>
+...
+  in:  19.541ms at    6.4MB/s (   4.7MB/s avg)    2.0MB
+ out:   0.004ms at   30.5GB/s (  27.1GB/s avg)    2.0MB
+thru:  19.865ms at    6.3MB/s (   4.6MB/s avg)    2.0MB
+...</pre>
+      </blockquote>
+    </p>
+    <p>
+      The first column shows the times it takes to handle one buffer
+      of data (128kB by default).  The read-call took 19.541ms, the
+      write-call to /dev/null took just 0.004ms and from the start of
+      the read to the end of write, it took 19.865ms.
+    </p>
+    <p>
+      The second column shows the result of dividing the buffer size
+      (128kB by default) by the times in the first column.
+    </p>
 
-    <p><a href="dir.ttml">Old versions</a> are available as well as a
-      <a href="CHANGES">change log</a>.
-<hr>
-Please send comments and suggestions to 
-<a href="mailto:kirschh@lionbioscience.com">Harald Kirsch</a>.
-</BODY>
-</HTML>
+    <hr>
+      <p>The current version is |VERSION|. You may want to read the
+      list of recent <a href="CHANGES">CHANGES</a>. The software
+      <font color="red">can be downloaded from</font>
+	<a href="http://developer.berlios.de/projects/cpipe/">
+	  <img align=center
+	       src="http://developer.berlios.de/sflogo.php?group_id=226&type=1"
+	       width="118" height="52" border="0" alt="BerliOS Logo">
+	</a>
+      </p>
+    </hr>
+</body>
+</html>
+

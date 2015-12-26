@@ -1,4 +1,4 @@
-## $Revision$, $Date$
+## $Revision: 1.3 $, $Date: 2003/07/22 08:16:29 $
 ## The following line is edited by my ship script to contain the true
 ## version I am shipping from cvs. (kir)
 %define VERSION 77.66.55
@@ -11,7 +11,7 @@ Copyright: GPL
 Group: Applications/Archiving
 Source: cpipe-%{VERSION}.tar.gz
 URL: http://wsd.iitb.fhg.de/~kir/cpipehome/
-Packager: Harald Kirsch (kirschh@lionbioscience.com)
+Packager: Harald Kirsch (pifpafpuf@gmx.de)
 
 BuildRoot: /tmp/cpipe-rpmbuild
 

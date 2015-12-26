@@ -2,7 +2,7 @@
 ## hope this is trivial enough to be installed without. If someone
 ## feels like sending me an autoconf-script for cpipe, I'll use it.
 ##
-## $Revision$, $Date$
+## $Revision: 1.6 $, $Date: 2008/10/18 09:41:00 $
 ########################################################################
 
 prefix=/usr
@@ -15,10 +15,11 @@ BINDIR=$(exec_prefix)/bin
 MANDIR=$(prefix)/man/man1
 
 ## Your favorite compiler flags.
-CFLAGS = -O -W -Wall
+CFLAGS = -O2 -W -Wall -pedantic
 
 ########################################################################
 cpipe: cpipe.o cmdline.o
+	$(CC) -lm -o $@ cpipe.o cmdline.o
 
 cpipe.o: cpipe.c cmdline.h
 
@@ -26,9 +27,9 @@ cmdline.o: cmdline.c cmdline.h
 
 
 cmdline.c cmdline.h cpipe.1: cmdline.cli
-	clig cmdline.cli || {\
+	@ (echo "clig cmdline.cli"; clig cmdline.cli) || { \
 	echo "*****"; \
-	echo "Get clig at http://wsd.iitb.fhg.de/~kir/clighome"; \
+	echo "Get clig at http://wsd.iitb.fhg.de/~geg/clighome"; \
 	echo "or use cmdline.c, cmdline.h and cpipe.1 as they come"; \
 	echo "in the distribution by touching them."; \
 	echo "*****"; \
@@ -44,3 +45,6 @@ install: cpipe cpipe.1
 	cp cpipe $(BINDIR); chmod 755 $(BINDIR)/cpipe
 	cp cpipe.1 $(MANDIR); chmod 744 $(MANDIR)/cpipe.1
 
+uninstall:
+	-rm $(BINDIR)/cpipe
+	-rm $(MANDIR)/cpipe.1

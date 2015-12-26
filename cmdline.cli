@@ -13,6 +13,9 @@ Flag -vr vr {show read-times}
 
 Flag -vw vw {show write-times}
 
+Flag -ngr ngr {non-greedy read. Don't enforce a full buffer
+on read before starting to write}
+
 Double -s speed {throughput speed limit in kB/s} -r 1 oo
 
 Description {
@@ -23,6 +26,26 @@ one or more of the
 .BI -v x
 options is given, statistics of average throughput and the total
 amount of bytes copied are printed to the standard error output.
+
+.SS Non Greedy Read
+Normally, cpipe does its best to totally fill its buffer (option
+.BR -b )
+before it starts writing. In some situations however, e.g. if you talk
+to an interactive 
+program via cpipe, this deadlocks the communication: said program
+waits for input which it will never see, because the input is stuck
+in cpipe's buffer. But cpipe itself will not see more input before the
+program does not respond.
+
+To get around this, try using 
+.BR -ngr . 
+When issuing a read call, cpipe is then satisfied as soon as it gets at
+least one byte. Instead of filling the buffer, it stops reading and
+writes whatever it got to the output. Note, however, that the
+throughput measurements will be less exact if the number of bytes
+transferred in one read/write pair becomes small, because cpipe will
+spent relatively more time working on every byte.
+
 
 .SS Limiting Throughput 
 If a throughput limit is specified with option
@@ -79,15 +102,23 @@ same for reading and writing.
 This program uses precious processor cycles. Consequently the measured
 times will be different from the transfer rates possible without it.
 
+Instead of just non-greedy reading, full non-blocking I/O and use of
+select(2) should be used to make sure that no deadlocks occur when
+communicating with interactive programs.
+
+
 .SH CREDITS
 Peter Astrand <astrand@lysator.liu.se> recommended the speed limit.
 
+Ivo De Decker <ivo@zeus.rug.ac.be> asked for deadlock prevention,
+which is (hopefully) sufficiently covered by the non-greedy read.
+
 .SH AUTHOR
 Bug reports, beer and postcards go to 
-.IR kirschh@lionbioscience.com . 
+.IR pifpafpuf@gmx.de . 
 New versions will show up on
 .br
-.IR http://wsd.iitb.fhg.de/~kir/cpipehome/ .
+.IR http://cpipe.berlios.de/ .
 
 }
 
