@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <math.h>
+#include <stdint.h>
 
 #include "cmdline.h"
 
@@ -87,7 +88,7 @@ deltaT(struct timeval* tin, struct timeval* tout)
 ssize_t
 readBuffer(char *buf, size_t length, int show, int nonblock, int *eof)
 {
-  size_t totalBytes;
+  uint64_t totalBytes;
   ssize_t bytes;
   struct timeval tin, tout;
   double dt;
@@ -137,7 +138,7 @@ readBuffer(char *buf, size_t length, int show, int nonblock, int *eof)
 	    scale(TotalBytes/totalTin, txt2),
 	    scale(TotalBytes, txt3));
     if( totalBytes<length ) {
-      fprintf(stderr, "   (bsize=%u)\n", totalBytes);
+      fprintf(stderr, "   (bsize=%lu)\n", totalBytes);
     } else {
       fprintf(stderr, "\n");
     }

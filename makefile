@@ -17,28 +17,22 @@ MANDIR=$(prefix)/man/man1
 ## Your favorite compiler flags.
 CFLAGS = -O2 -W -Wall -pedantic
 
+VERSION=$(shell cat .version)
 ########################################################################
+all: cpipe cpipe.1
+
 cpipe: cpipe.o cmdline.o
-	$(CC) -lm -o $@ cpipe.o cmdline.o
+	$(CC) -o $@ cpipe.o cmdline.o -lm
+
+cpipe.1: cpipe.1.in
+	sed -e "s/|VERSION|/${VERSION}/g" <cpipe.1.in >cpipe.1
 
 cpipe.o: cpipe.c cmdline.h
 
 cmdline.o: cmdline.c cmdline.h
 
-
-cmdline.c cmdline.h cpipe.1: cmdline.cli
-	@ (echo "clig cmdline.cli"; clig cmdline.cli) || { \
-	echo "*****"; \
-	echo "Get clig at http://wsd.iitb.fhg.de/~geg/clighome"; \
-	echo "or use cmdline.c, cmdline.h and cpipe.1 as they come"; \
-	echo "in the distribution by touching them."; \
-	echo "*****"; \
-	exit 1; \
-        }
-
 clean:
-	rm cmdline.o cpipe.o cpipe
-
+	rm cmdline.o cpipe.o cpipe cpipe.1
 
 install: cpipe cpipe.1
 	mkdir -p $(BINDIR) $(MANDIR)
