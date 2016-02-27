@@ -17,10 +17,10 @@ to the standard error output.
 ## Example
 The command
 ```bash
-  tar cCf / - usr | <font color=red>cpipe</font> -vr -vw -vt > /dev/null
+  tar cCf / - usr | cpipe -vr -vw -vt > /dev/null
 ```
 results in an output like
-```terminal
+```
 ...
   in:  19.541ms at    6.4MB/s (   4.7MB/s avg)    2.0MB
  out:   0.004ms at   30.5GB/s (  27.1GB/s avg)    2.0MB
