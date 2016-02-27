@@ -1,5 +1,0 @@
-cpipe
-cmdline.c cmdline.h cpipe.1
-*.dc
-index.html *.tar.gz
-CHANGES
