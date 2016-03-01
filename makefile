@@ -37,7 +37,7 @@ clean:
 install: cpipe cpipe.1
 	mkdir -p $(BINDIR) $(MANDIR)
 	cp cpipe $(BINDIR); chmod 755 $(BINDIR)/cpipe
-	cp cpipe.1 $(MANDIR); chmod 744 $(MANDIR)/cpipe.1
+	cp cpipe.1 $(MANDIR); chmod 644 $(MANDIR)/cpipe.1
 
 uninstall:
 	-rm $(BINDIR)/cpipe
